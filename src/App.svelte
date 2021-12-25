@@ -27,7 +27,7 @@
         );
       },
       wsLink,
-      httpLink
+      httpLink,
     );
     return new ApolloClient({
       link,
@@ -41,9 +41,7 @@
 
   const addFruit = async () => {
     const name = prompt("name") || "";
-    await http.startExecuteMyMutation(
-      OperationDocsStore.addOne(name)
-    );
+    await http.startExecuteMyMutation(OperationDocsStore.addOne(name));
   };
 
   const deleteFruit = async () => {
