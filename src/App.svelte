@@ -69,7 +69,7 @@
     <button on:click={addFruit}>Add new fruit</button>
     <button on:click={deleteFruit}>Delete fruit</button>
 
-    {#each $fruits.data.fruits as fruit}
+    {#each $fruits.data.fruits as fruit (fruit.id)}
       <div>
         <p>fruit name: {fruit.name}</p>
         <p>user id: {fruit.user_id}</p>
