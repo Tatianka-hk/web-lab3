@@ -11,6 +11,9 @@ class RequestHelper {
         variables: variables,
         operationName: operationName,
       }),
+      headers:{
+      "x-hasura-admin-secret": admin
+    },
     });
 
     return await result.json();
@@ -18,14 +21,7 @@ class RequestHelper {
   fetchMyQuery(operationsDoc) {
     return this.fetchGraphQL(operationsDoc, "MyQuery", {});
   }
-  fetch(url, {
-    method:hello,
-    Body:{},
-    headers:{
-      "x-hasura-admin-secret": admin
-    }
-    })
-}
+
   async startFetchMyQuery(operationsDoc) {
     const { errors, data } = await this.fetchMyQuery(operationsDoc);
 
