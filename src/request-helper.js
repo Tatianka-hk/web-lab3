@@ -25,7 +25,7 @@ class RequestHelper {
       "x-hasura-admin-secret": admin
     }
     })
-
+}
   async startFetchMyQuery(operationsDoc) {
     const { errors, data } = await this.fetchMyQuery(operationsDoc);
 
