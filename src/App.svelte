@@ -80,6 +80,9 @@
         <hr />
       </div>
     {/each}
+    {#if $errors.length || $notes.error}
+          <h2>{$errors[0]}</h2>
+        {/if}
   {/if}
 </main>
 
