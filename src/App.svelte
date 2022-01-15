@@ -55,7 +55,7 @@
   };
 
   const deleteFruit = async () => {
-    const name = prompt("which fruit to delete?") || "";
+    const name = inputValues.add.name;
     if (name) {
       await http.startExecuteMyMutation(OperationDocsStore.deleteByName(name));
       // heroes.update(n => n.filter(hero => hero.name!==name))
