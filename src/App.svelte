@@ -6,7 +6,10 @@
   import { setClient, subscribe } from "svelte-apollo";
   import { WebSocketLink } from "@apollo/client/link/ws";
   import { getMainDefinition } from "@apollo/client/utilities";
-
+  const inputValues = {
+    add: {},
+    delete: {},
+  };
   function createApolloClient() {
     const headers = {
       "x-hasura-admin-secret": "secret",
@@ -47,7 +50,7 @@
   const fruits = subscribe(OperationDocsStore.subscribeToAll());
 
   const addFruit = async () => {
-    const name = prompt("name") || "";
+    const { title, status } = inputValues.add.name;
     await http.startExecuteMyMutation(OperationDocsStore.addOne(name));
   };
 
@@ -66,6 +69,7 @@
   {:else if $fruits.error}
     <h1>{$fruits.error}</h1>
   {:else}
+    <input placeholder="Fruit" bind:value={inputValues.add.name} />
     <button on:click={addFruit}>Add new fruit</button>
     <button on:click={deleteFruit}>Delete fruit</button>
 
