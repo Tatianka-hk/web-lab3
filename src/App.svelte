@@ -1,5 +1,4 @@
 <script>
-  import { onMount } from "svelte";
   import http from "./request-helper";
   import OperationDocsStore from "./operationDocsStore";
   import { ApolloClient, InMemoryCache, HttpLink, split } from "@apollo/client";
@@ -7,10 +6,7 @@
   import { WebSocketLink } from "@apollo/client/link/ws";
   import { getMainDefinition } from "@apollo/client/utilities";
   import { errors, requestCounter } from "./store";
-  const inputValues = {
-    add: {},
-    delete: {},
-  };
+  const inputValues = {};
   function createApolloClient() {
     const headers = {
       "x-hasura-admin-secret": ADMIN,
@@ -19,7 +15,19 @@
       uri: URI,
       headers,
     });
-    const cache = new InMemoryCache();
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Subscription: {
+          fields: {
+            fruits: {
+              merge(_existing, incoming) {
+                return incoming;
+              },
+            },
+          },
+        },
+      },
+    });
     const wsLink = new WebSocketLink({
       uri: WS,
       options: {
@@ -50,48 +58,49 @@
   setClient(client);
   const fruits = subscribe(OperationDocsStore.subscribeToAll());
 
-  const addFruit = async () => {
-    try {
-      const name = inputValues.add.name;
-      await http.startExecuteMyMutation(OperationDocsStore.addOne(name));
-    } catch (e) {
-      console.error;
-      $errors = [e.message];
-    }
+  const addFruit = () => {
+    const { name } = inputValues;
+    http
+      .startExecuteMyMutation(OperationDocsStore.addOne(name ?? ""))
+      .catch((e) => {
+        console.error(e);
+        $errors = [e.message];
+      });
   };
 
-  const deleteFruit = async () => {
-    const name = inputValues.add.name;
-    if (name) {
-      try {
-        await http.startExecuteMyMutation(
-          OperationDocsStore.deleteByName(name),
-        );
-      } catch (e) {
-        console.error;
+  const deleteFruit = (id) => {
+    http
+      .startExecuteMyMutation(OperationDocsStore.deleteById(id))
+      .catch((e) => {
+        console.error(e);
         $errors = [e.message];
-      }
-    }
+      });
   };
 </script>
 
 <main>
-  {#if $fruits.loading}
+  {#if $fruits.loading || $requestCounter}
     <h1>Loading...</h1>
-  {:else if $fruits.error}
-    <h1>{$fruits.error}</h1>
+  {:else if $fruits.error || $errors.length}
+    <h1>{$fruits.error || $errors.join("\n")}</h1>
   {:else}
-    <input placeholder="Fruit" bind:value={inputValues.add.name} />
-    <button on:click={addFruit}>Add new fruit</button>
-    <button on:click={deleteFruit}>Delete fruit</button>
+    <div>
+      <input placeholder="Add fruit" bind:value={inputValues.name} />
+      <button on:click={addFruit}>Add new fruit</button>
+    </div>
 
-    {#each $fruits.data.fruits as fruit (fruit.id)}
-      <div>
-        <p>fruit name: {fruit.name}</p>
-        <p>user id: {fruit.user_id}</p>
-        <hr />
-      </div>
-    {/each}
+    {#if $fruits?.data?.fruits?.length}
+      {#each $fruits.data.fruits as fruit (fruit.id)}
+        <div>
+          <p>fruit name: {fruit.name}</p>
+          <p>user id: {fruit.user_id}</p>
+          <button on:click={() => deleteFruit(fruit.id)}>Delete fruit</button>
+          <hr />
+        </div>
+      {/each}
+    {:else}
+      <h1>No fruits :(</h1>
+    {/if}
     {#if $errors.length}
       <h2>{$errors[0]}</h2>
     {/if}
