@@ -1,6 +1,7 @@
+import { error, requestCounter } from "./store";
 class RequestHelper {
   constructor() {
-    this.API_URL = "https://myweblabs.herokuapp.com/v1/graphql";
+    this.API_URL = URL;
   }
 
   async fetchGraphQL(operationsDoc, operationName, variables) {
@@ -11,9 +12,9 @@ class RequestHelper {
         variables: variables,
         operationName: operationName,
       }),
-      headers:{
-      "x-hasura-admin-secret": admin
-    },
+      headers: {
+        "x-hasura-admin-secret": ADMIN,
+      },
     });
 
     return await result.json();
@@ -23,11 +24,13 @@ class RequestHelper {
   }
 
   async startFetchMyQuery(operationsDoc) {
+    requestCounter.update((n) => n + 1);
     const { errors, data } = await this.fetchMyQuery(operationsDoc);
+    requestCounter.update((n) => n - 1);
 
     if (errors) {
-      // handle those errors like a pro
       console.error(errors);
+      throw new Error(errors[0].message);
     }
 
     // do something great with this precious data
@@ -43,8 +46,8 @@ class RequestHelper {
     const { errors, data } = await this.executeMyMutation(operationsDoc);
 
     if (errors) {
-      // handle those errors like a pro
       console.error(errors);
+      throw new Error(errors[0].message);
     }
 
     // do something great with this precious data

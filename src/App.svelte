@@ -6,21 +6,22 @@
   import { setClient, subscribe } from "svelte-apollo";
   import { WebSocketLink } from "@apollo/client/link/ws";
   import { getMainDefinition } from "@apollo/client/utilities";
+  import { errors, requestCounter } from "./store";
   const inputValues = {
     add: {},
     delete: {},
   };
   function createApolloClient() {
     const headers = {
-      "x-hasura-admin-secret": "secret",
+      "x-hasura-admin-secret": ADMIN,
     };
     const httpLink = new HttpLink({
-      uri: "https://myweblabs.herokuapp.com/v1/graphql",
+      uri: URI,
       headers,
     });
     const cache = new InMemoryCache();
     const wsLink = new WebSocketLink({
-      uri: "wss://myweblabs.herokuapp.com/v1/graphql",
+      uri: WS,
       options: {
         reconnect: true,
         connectionParams: {
@@ -50,15 +51,26 @@
   const fruits = subscribe(OperationDocsStore.subscribeToAll());
 
   const addFruit = async () => {
-    const { title, status } = inputValues.add.name;
-    await http.startExecuteMyMutation(OperationDocsStore.addOne(name));
+    try {
+      const name = inputValues.add.name;
+      await http.startExecuteMyMutation(OperationDocsStore.addOne(name));
+    } catch (e) {
+      console.error;
+      $errors = [e.message];
+    }
   };
 
   const deleteFruit = async () => {
     const name = inputValues.add.name;
     if (name) {
-      await http.startExecuteMyMutation(OperationDocsStore.deleteByName(name));
-      // heroes.update(n => n.filter(hero => hero.name!==name))
+      try {
+        await http.startExecuteMyMutation(
+          OperationDocsStore.deleteByName(name),
+        );
+      } catch (e) {
+        console.error;
+        $errors = [e.message];
+      }
     }
   };
 </script>
@@ -80,9 +92,9 @@
         <hr />
       </div>
     {/each}
-    {#if $errors.length || $notes.error}
-          <h2>{$errors[0]}</h2>
-        {/if}
+    {#if $errors.length}
+      <h2>{$errors[0]}</h2>
+    {/if}
   {/if}
 </main>
 
